@@ -1,0 +1,95 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{polski}
+\usepackage{enumitem}
+\usepackage{amssymb}
+\usepackage{lipsum} 
+\usepackage{titling}
+\usepackage{hyperref}
+\renewcommand{\refname}{Źródła}
+
+\author{Marcin Miśkiewicz, Adrian Sobczak}
+\title{\textbf{Analiza mocy wybranych testów statystycznych}}
+\date{\today}
+
+\begin{document}
+
+<<SETUP, include=FALSE>>=
+# ------------------------------------------- SETUP
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE, dev="cairo_pdf")
+pdf.options(encoding='CP1250')
+
+## custom inline output (in order to print rounded numbers)
+inline_hook <- function(x) {
+    if(is.numeric(x)) x <- round(x, 2)
+    paste(as.character(x), collapse=", ")
+}
+knit_hooks$set(inline = inline_hook)
+
+@
+
+<< LIBRARIES + global ggplot config, echo=F>>=
+# ------------------------------------------- LIBRARIES + global ggplot config
+library(ggplot2)
+library(BSDA)
+library(tidyr)
+
+theme_set(theme_bw(base_size = 25))
+theme_update(plot.title = element_text(hjust = 0.5),
+             plot.subtitle = element_text(hjust = 0.5))
+
+@
+
+<< POWER FUNCTIONS >>=
+moc.z <- function(mu, mu0, sigma, n=100, alternative="two.sided", alpha=0.05, MC=1000) {
+            mean(sapply(1:MC, function(...) {
+                X <- rnorm(n, mu, sigma)
+                z.test(X, mu=mu0, sigma.x = 2, alternative=alternative)$p.value < alpha
+              }))
+            }
+
+moc.t <- function(mu, mu0, sigma, n=100, alternative="two.sided", alpha=0.05, MC=1000) {
+            mean(sapply(1:MC, function(...) {
+              X <- rnorm(n, mu, sigma)
+              t.test(X, mu=mu0, alternative=alternative)$p.value < alpha
+            }))
+           }
+
+moc.wilcoxon <- function(mu, mu0, sigma, n=100, alternative="two.sided", alpha=0.05, MC=1000) {
+                  mean(sapply(1:MC, function(...) {
+                    X <- rnorm(n, mu, sigma)
+                    wilcox.test(X, mu=mu0, alternative=alternative)$p.value < alpha
+                  }))
+                }
+@
+
+
+\maketitle
+
+<<echo=F, fig.width=14, fig.height=6, fig.align="center", fig.cap="\\label{fig:power_z1}Podpis">>=
+set.seed(42)
+
+sigma <- 2
+mu0 <- 1
+mu <- seq(-1, 3, 0.01)
+MC <- 100
+
+moc_1 <- sapply(mu, function(m) {moc.z(m, mu0, sigma, MC=MC)})
+moc_2 <- sapply(mu, function(m) {moc.t(m, mu0, sigma, MC=MC)})
+moc_3 <- sapply(mu, function(m) {moc.wilcoxon(m, mu0, sigma, MC=MC)})
+
+dfz_1 <- data.frame("mu" = mu, "moc" = moc_1, "test" = "z")
+dft_1 <- data.frame("mu" = mu, "moc" = moc_2, "test" = "t")
+dfw_1 <- data.frame("mu" = mu, "moc" = moc_3, "test" = "Wilcoxon")
+df1 <- rbind(dfz_1, dft_1, dfw_1)
+
+ggplot(df1, aes(x=mu, y=moc)) +
+      geom_line(aes(color=test), size=1) +
+      geom_hline(yintercept=0.05) +
+      geom_vline(xintercept=mu0) +
+      labs(x = expression(mu), y="moc", title="Funkcje mocy testów")
+
+@
+
+\end{document}

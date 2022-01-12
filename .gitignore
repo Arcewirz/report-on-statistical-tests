@@ -37,3 +37,11 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+
+/knitr/*.gz
+/knitr/*.tex
+/knitr/*.txt
+/knitr/*.log
+/knitr/*.pdf
+/knitr/figure/*.pdf
