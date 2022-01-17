@@ -10,10 +10,11 @@
 \renewcommand{\refname}{Źródła}
 
 \author{Marcin Miśkiewicz, Adrian Sobczak}
-\title{\textbf{Analiza mocy wybranych testów statystycznych}}
+\title{\textbf{Symulacyjna analiza mocy \\ wybranych testów statystycznych}}
 \date{\today}
 
 \begin{document}
+
 
 <<SETUP, include=FALSE>>=
 # ------------------------------------------- SETUP
@@ -34,6 +35,8 @@ knit_hooks$set(inline = inline_hook)
 library(ggplot2)
 library(BSDA)
 library(tidyr)
+# library(cacheSweave)
+# Sweave(infile, driver = cacheSweaveDriver)
 
 theme_set(theme_bw(base_size = 25))
 theme_update(plot.title = element_text(hjust = 0.5),
@@ -67,13 +70,51 @@ moc.wilcoxon <- function(mu, mu0, sigma, n=100, alternative="two.sided", alpha=0
 
 \maketitle
 
-<<echo=F, fig.width=14, fig.height=6, fig.align="center", fig.cap="\\label{fig:power_z1}Podpis">>=
+
+\section{Wprowadzenie}
+
+Celem niniejszego sprawozdania jest symulacyjna analiza mocy trzech wybranych testów statycznych dla danych pochodzących z trzech różnych rozkładów. W każdym przypadku sprawdzimy czy wśród rozpatrywanych testów istnieje test jednoznacznie najmocniejszy, a także zwrócimy uwagę na to jak testy działają dla danych niespełniających potrzebnych założeń.
+
+\subsection{Opis analizy}
+
+Badanymi testami będą: test $z$ (przy założeniu $\sigma = 2$), test $t$ oraz test rang znakowanych Wilcoxona. Rozpatrzymy trzy przypadki: dane z rozkładu $\mathcal{N}(\mu, 2^2)$, dane z rozkładu $\mathcal{N}(\mu, 4^2)$ oraz dane z rozkładu $\mathcal{E}(\frac{1}{\mu})$.
+W każdym przypadku przyjmiemy pewną wartość $\mu$, wygenerujemy 100 obserwacji z danego rozkładu i będziemy testować $H_0: \mu = 1$ przeciwko $H_1: \mu \neq 1,$ na poziomie istotności $\alpha = 0.05.$ Korzystając z metody Monte Carlo, procedurę tę powtórzymy 100 razy i za moc przyjmiemy ile procent przeprowadzonych testów prowadziło do odrzucenia hipotezy zerowej. Wszystkie omówione kroki wykonamy dla wielu $\mu$ z przedziału zawierającego wartości z hipotezy zerowej oraz alternatywnej. 
+
+\subsection{Opis rozpatrywanych testów}
+
+Dla dwustronnego testu $z$ zakładamy, że $X_1, \ldots, X_{n}$ są niezależnymi zmiennymi losowymi z rozkładu $\mathcal{N}(\mu, \sigma^2)$, gdzie $\mu$ jest nieznane, a $\sigma$ jest znaną wariancją. Statystyką testową jest $\bar{X}$, czyli średnia z próby. Dla testu nieobciążonego, funkcja mocy wyraża się wzorem
+
+\[\beta(\mu) = \Phi\left(\sqrt{n}\frac{\mu_0 - \mu}{\sigma} - z_{1 - \frac{\alpha}{2}}\right) + 1 -\Phi\left(\sqrt{n}\frac{\mu_0 - \mu}{\sigma} + z_{1 - \frac{\alpha}{2}}\right ),\]
+
+\noindent gdzie $\Phi$ to dystrybuanta, a $z_{1 - \frac{\alpha}{2}}$ to kwantyl rzędu $1 - \frac{\alpha}{2}$  standardowego rozkładu normalnego.
+
+Dla dwustronnego testu $t$ zakładamy, że $X_1, \ldots, X_{n}$ są niezależnymi zmiennymi losowymi z rozkładu $\mathcal{N}(\mu, \sigma^2)$, gdzie $\mu$ i $\sigma$ są nieznane. Statystyką testową również jest $\bar{X}$, a sam test oparty jest na fakcie 
+
+\[t = \sqrt{n}\frac{\bar{X} - \mu_0}{S} \sim \mathcal{T}(n-1),\]
+
+\noindent gdzie $S$ to nieobciążony estymator wariancji, a $\mathcal{T}(n-1)$ to rozkład t-Studenta z $n-1$ stopniami swobody. Testu $t$ używa się gdy nie znamy wartości $\sigma$, jednak warto zauważyć, że ze względu na nieobciążoność estymatora $S$, dla dużych prób wyniki uzyskane przy pomocy testu $t$ są bardzo podobne do tych z testu~$z$.
+
+
+% Funkcja mocy wyraża się wzorem
+% 
+% \[\beta(\mu) = F_{n-1; \sqrt{n}\frac{\mu-\mu_0}{\sigma}}(-t_{n-1}(1 - \alpha)) - F_{n-1; \sqrt{n}\frac{\mu-\mu_0}{\sigma}}(t_{n-1}(1 - \alpha)) + 1\]
+
+Test rang znakowanych Wilcoxona jest często używanym nieparametrycznym odpowiednikiem testu t-Studenta, jednak nie wymaga on założenia o~normalności badanej próby. Kosztem tej uniwersalności jest mniejsza moc gdy dane faktycznie pochodzą z rozkładu normalnego -- wtedy test $t$ to lepszy wybór. W teście rang znakowanych Wilcoxona hipoteza zerowa jest postaci
+
+\[H_0: X - \mu_0 \stackrel{st}{=} \mu_0 - X,\]
+
+\noindent gdzie zapisana równość to równość stochastyczna. W naszym przypadku będziemy rozpatrywać $X$ z rozkładu normalnego i z rozkładu wykładniczego. Rozkład normalny jest symetryczny, dlatego wynik będziemy mogli zinterpretować jako test mediany (i równoważnie średniej). Rozkład wykładniczy nie jest symetryczny, ale ze względu na ciągłość, będziemy mogli zinterpretować wynik jako test jednoznacznie wyznaczonej pseudomediany. 
+\section{Przypadek 1.}
+
+% Na wykresie \ref{fig:power_z1} 
+
+<<echo=F, cache=T, fig.width=14, fig.height=6, fig.align="center", fig.cap="\\label{fig:power_z1}Wykres funkcji mocy przeprowadzonych testów.">>=
 set.seed(42)
 
 sigma <- 2
 mu0 <- 1
 mu <- seq(-1, 3, 0.01)
-MC <- 100
+MC <- 1000
 
 moc_1 <- sapply(mu, function(m) {moc.z(m, mu0, sigma, MC=MC)})
 moc_2 <- sapply(mu, function(m) {moc.t(m, mu0, sigma, MC=MC)})
@@ -88,8 +129,24 @@ ggplot(df1, aes(x=mu, y=moc)) +
       geom_line(aes(color=test), size=1) +
       geom_hline(yintercept=0.05) +
       geom_vline(xintercept=mu0) +
-      labs(x = expression(mu), y="moc", title="Funkcje mocy testów")
+      labs(x = expression(mu), y="moc", title="Funkcje mocy testów")  +
+      scale_color_discrete(labels = c("t", "Wilcoxon", bquote(paste("z (", sigma, " = 2)", sep="")))) +
+      theme(legend.position = c(0.85, 0.4), legend.background = element_rect(fill = "white", color = "black"))
 
+@
+
+<<echo=F, fig.width=14, fig.height=9, fig.align="center", fig.cap="\\label{fig:diff_1}Wykresy różnicy mocy przeprowadzonych testów.">>=
+
+zt_diff1 <- data.frame("mu" = mu, "różnica" = moc_1 - moc_2, "testy" = "moc z - moc t")
+zw_diff1 <- data.frame("mu" = mu, "różnica" = moc_1 - moc_3, "testy" = "moc z - moc Wilc.")
+tw_diff1 <- data.frame("mu" = mu, "różnica" = moc_2 - moc_3, "testy" = "moc t - moc Wilc.")
+df_diff1 <- rbind(zt_diff1, zw_diff1, tw_diff1)
+
+ggplot(df_diff1, aes(x=mu, y=różnica)) +
+  geom_point(color="darkslateblue") +
+  labs(x = expression(mu)) +
+  facet_grid(testy ~ ., scales = "free_y") + 
+  theme(legend.position = "none")
 @
 
 \end{document}
