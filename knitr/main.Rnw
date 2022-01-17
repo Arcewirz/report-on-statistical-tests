@@ -92,7 +92,7 @@ Dla dwustronnego testu $t$ zakładamy, że $X_1, \ldots, X_{n}$ są niezależnym
 
 \[t = \sqrt{n}\frac{\bar{X} - \mu_0}{S} \sim \mathcal{T}(n-1),\]
 
-\noindent gdzie $S$ to nieobciążony estymator wariancji, a $\mathcal{T}(n-1)$ to rozkład t-Studenta z $n-1$ stopniami swobody. Testu $t$ używa się gdy nie znamy wartości $\sigma$, jednak warto zauważyć, że ze względu na nieobciążoność estymatora $S$, dla dużych prób wyniki uzyskane przy pomocy testu $t$ są bardzo podobne do tych z testu~$z$.
+\noindent gdzie $S$ to nieobciążony estymator wariancji, a~$\mathcal{T}(n-1)$ to rozkład t-Studenta z~$n-1$ stopniami swobody. Testu $t$ używa się gdy nie znamy wartości~$\sigma$, jednak warto zauważyć, że ze względu na nieobciążoność estymatora $S$, dla dużych prób wyniki uzyskane przy pomocy testu $t$ są bardzo podobne do tych z testu~$z$.
 
 
 % Funkcja mocy wyraża się wzorem
@@ -104,16 +104,20 @@ Test rang znakowanych Wilcoxona jest często używanym nieparametrycznym odpowie
 \[H_0: X - \mu_0 \stackrel{st}{=} \mu_0 - X,\]
 
 \noindent gdzie zapisana równość to równość stochastyczna. W naszym przypadku będziemy rozpatrywać $X$ z rozkładu normalnego i z rozkładu wykładniczego. Rozkład normalny jest symetryczny, dlatego wynik będziemy mogli zinterpretować jako test mediany (i równoważnie średniej). Rozkład wykładniczy nie jest symetryczny, ale ze względu na ciągłość, będziemy mogli zinterpretować wynik jako test jednoznacznie wyznaczonej pseudomediany. 
-\section{Przypadek 1.}
+\section{Analiza}
 
-% Na wykresie \ref{fig:power_z1} 
+Analizę podzielimy na trzy, opisane wcześniej przypadki.
 
-<<echo=F, cache=T, fig.width=14, fig.height=6, fig.align="center", fig.cap="\\label{fig:power_z1}Wykres funkcji mocy przeprowadzonych testów.">>=
+\subsection{Przypadek 1.}
+
+<<echo=F, cache=T>>=
 set.seed(42)
 
 sigma <- 2
 mu0 <- 1
-mu <- seq(-1, 3, 0.01)
+
+h <- 0.01
+mu <- seq(-1, 3, h)
 MC <- 1000
 
 moc_1 <- sapply(mu, function(m) {moc.z(m, mu0, sigma, MC=MC)})
@@ -124,7 +128,14 @@ dfz_1 <- data.frame("mu" = mu, "moc" = moc_1, "test" = "z")
 dft_1 <- data.frame("mu" = mu, "moc" = moc_2, "test" = "t")
 dfw_1 <- data.frame("mu" = mu, "moc" = moc_3, "test" = "Wilcoxon")
 df1 <- rbind(dfz_1, dft_1, dfw_1)
+@
 
+Rozpatrujemy próbę $X_1, \ldots, X_{100}$ z rozkładu $\mathcal{N}(0, 2^2).$ Weźmy $\mu$ z przedziału $(-1, 3)$, z krokiem $h=$\Sexpr{h}. 
+Na wykresie (\ref{fig:power_z1}) linia pionowa została poprowadzona w punkcie $\mu = 1$ z hipotezy zerowej, a linia pozioma wskazuje na przyjęty poziom istotności $\alpha = 0.05$. Możemy zauważyć, że symulacyjnie wyznaczone funkcje mocy są do siebie bardzo zbliżone. Wszystkie testy zdają się być nieobciążone, a prawdopodobieństwo odrzucenia prawdziwej hipotezy zerowej przez każdy z nich jest, z godnie z oczekiwaniami, w okolicach 0.05. Na wykresie (\ref{fig:diff_1}) zaznaczono różnicę mocy dla każdej pary testów. Pomijając te wartości $\mu$ dla których testy mają jednakową moc, okazuje się, że test $z$ jest mocniejszy od testu $t$ w \Sexpr{100 * sum(moc_1 > moc_2) / sum(moc_1 > moc_2 | moc_1 < moc_2)}\% przypadków, a od testu Wilcoxona w \Sexpr{100 * sum(moc_1 > moc_3) / sum(moc_1 > moc_3 | moc_1 < moc_3)}\% przypadków. Test $t$ jest mocniejszy od testu Wilcoxona w \Sexpr{100 * sum(moc_2 > moc_3) / sum(moc_2 > moc_3 | moc_2 < moc_3)}\% przypadków. Z wykresu (\ref{fig:diff_1}) możemy odczytać, że różnice w mocy są rzędu kilku setnych, a dla $\mu = 1$ testy działają bardzo podobnie. 
+
+Tak więc, pomimo tego, że na pierwszy rzut oka funkcje mocy są zbliżone, dla danych z rozkładu $\mathcal{N}(0, 2^2)$ najlepszym wyborem zdaje się być test $z$ (oczywiście cały czas mówimy o teście przy założeniu $\sigma = 2$). Niemniej jednak, na podstawie przeprowadzonych symulacji, nie jesteśmy w stanie wskazać testu jednostajnie najmocniejszego.
+
+<<echo=F, fig.width=14, fig.height=6, fig.align="center", fig.cap="\\label{fig:power_z1}Wykres funkcji mocy przeprowadzonych testów.">>=
 ggplot(df1, aes(x=mu, y=moc)) +
       geom_line(aes(color=test), size=1) +
       geom_hline(yintercept=0.05) +
@@ -149,4 +160,7 @@ ggplot(df_diff1, aes(x=mu, y=różnica)) +
   theme(legend.position = "none")
 @
 
+\subsection{Przypadek 2.}
+\subsection{Przypadek 3.}
+\section{Wnioski}
 \end{document}
