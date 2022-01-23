@@ -42,9 +42,10 @@ theme_set(theme_bw(base_size = 25))
 theme_update(plot.title = element_text(hjust = 0.5),
              plot.subtitle = element_text(hjust = 0.5))
 
+colors <- c("z" = "#9a8aff", "t" = "#ff8400", "Wilcoxon" = "#00cba7")
 @
 
-<< POWER FUNCTIONS >>=
+<< POWER FUNCTIONS 1>>=
 moc.z <- function(mu, mu0, sigma, n=100, alternative="two.sided", alpha=0.05, MC=1000) {
             mean(sapply(1:MC, function(...) {
                 X <- rnorm(n, mu, sigma)
@@ -78,7 +79,7 @@ Celem niniejszego sprawozdania jest symulacyjna analiza mocy trzech wybranych te
 \subsection{Opis analizy}
 
 Badanymi testami będą: test $z$ (przy założeniu $\sigma = 2$), test $t$ oraz test rang znakowanych Wilcoxona. Rozpatrzymy trzy przypadki: dane z rozkładu $\mathcal{N}(\mu, 2^2)$, dane z rozkładu $\mathcal{N}(\mu, 4^2)$ oraz dane z rozkładu $\mathcal{E}(\frac{1}{\mu})$.
-W każdym przypadku przyjmiemy pewną wartość $\mu$, wygenerujemy 100 obserwacji z danego rozkładu i będziemy testować $H_0: \mu = 1$ przeciwko $H_1: \mu \neq 1,$ na poziomie istotności $\alpha = 0.05.$ Korzystając z metody Monte Carlo, procedurę tę powtórzymy 100 razy i za moc przyjmiemy ile procent przeprowadzonych testów prowadziło do odrzucenia hipotezy zerowej. Wszystkie omówione kroki wykonamy dla wielu $\mu$ z przedziału zawierającego wartości z hipotezy zerowej oraz alternatywnej. 
+W każdym przypadku przyjmiemy pewną wartość $\mu$, wygenerujemy 100 obserwacji z~danego rozkładu i będziemy testować $H_0: \mu = 1$ przeciwko $H_1: \mu \neq 1,$ na poziomie istotności $\alpha = 0.05.$ Korzystając z metody Monte Carlo, procedurę tę powtórzymy 100 razy i za moc przyjmiemy ile procent przeprowadzonych testów prowadziło do odrzucenia hipotezy zerowej. Wszystkie omówione kroki wykonamy dla wielu $\mu$ z przedziału zawierającego wartości z hipotezy zerowej oraz alternatywnej. 
 
 \subsection{Opis rozpatrywanych testów}
 
@@ -92,7 +93,7 @@ Dla dwustronnego testu $t$ zakładamy, że $X_1, \ldots, X_{n}$ są niezależnym
 
 \[t = \sqrt{n}\frac{\bar{X} - \mu_0}{S} \sim \mathcal{T}(n-1),\]
 
-\noindent gdzie $S$ to nieobciążony estymator wariancji, a~$\mathcal{T}(n-1)$ to rozkład t-Studenta z~$n-1$ stopniami swobody. Testu $t$ używa się gdy nie znamy wartości~$\sigma$, jednak warto zauważyć, że ze względu na nieobciążoność estymatora $S$, dla dużych prób wyniki uzyskane przy pomocy testu $t$ są bardzo podobne do tych z testu~$z$.
+\noindent gdzie $S$ to nieobciążony estymator wariancji, a~$\mathcal{T}(n-1)$ to rozkład t-Studenta z~$n-1$ stopniami swobody. Testu $t$ używa się gdy nie znamy wartości $\sigma$,~jednak warto zauważyć, że ze względu na nieobciążoność estymatora $S$, dla dużych prób wyniki uzyskane przy pomocy testu $t$ są bardzo podobne do tych z~testu~$z$.
 
 
 % Funkcja mocy wyraża się wzorem
@@ -106,11 +107,11 @@ Test rang znakowanych Wilcoxona jest często używanym nieparametrycznym odpowie
 \noindent gdzie zapisana równość to równość stochastyczna. W naszym przypadku będziemy rozpatrywać $X$ z rozkładu normalnego i z rozkładu wykładniczego. Rozkład normalny jest symetryczny, dlatego wynik będziemy mogli zinterpretować jako test mediany (i równoważnie średniej). Rozkład wykładniczy nie jest symetryczny, ale ze względu na ciągłość, będziemy mogli zinterpretować wynik jako test jednoznacznie wyznaczonej pseudomediany. 
 \section{Analiza}
 
-Analizę podzielimy na trzy, opisane wcześniej przypadki.
+Analizę podzielimy na trzy opisane wcześniej przypadki.
 
-\subsection{Przypadek 1.}
+\subsection{Przypadek 1.}\label{sec:case1}
 
-<<echo=F, cache=T>>=
+<<SYMULACJA-ZADANIE_1, echo=F, cache=T>>=
 set.seed(42)
 
 sigma <- 2
@@ -120,37 +121,38 @@ h <- 0.01
 mu <- seq(-1, 3, h)
 MC <- 1000
 
-moc_1 <- sapply(mu, function(m) {moc.z(m, mu0, sigma, MC=MC)})
-moc_2 <- sapply(mu, function(m) {moc.t(m, mu0, sigma, MC=MC)})
-moc_3 <- sapply(mu, function(m) {moc.wilcoxon(m, mu0, sigma, MC=MC)})
+moc_z1 <- sapply(mu, function(m) {moc.z(m, mu0, sigma, MC=MC)})
+moc_t1 <- sapply(mu, function(m) {moc.t(m, mu0, sigma, MC=MC)})
+moc_w1 <- sapply(mu, function(m) {moc.wilcoxon(m, mu0, sigma, MC=MC)})
 
-dfz_1 <- data.frame("mu" = mu, "moc" = moc_1, "test" = "z")
-dft_1 <- data.frame("mu" = mu, "moc" = moc_2, "test" = "t")
-dfw_1 <- data.frame("mu" = mu, "moc" = moc_3, "test" = "Wilcoxon")
+dfz_1 <- data.frame("mu" = mu, "moc" = moc_z1, "test" = "z")
+dft_1 <- data.frame("mu" = mu, "moc" = moc_t1, "test" = "t")
+dfw_1 <- data.frame("mu" = mu, "moc" = moc_w1, "test" = "Wilcoxon")
 df1 <- rbind(dfz_1, dft_1, dfw_1)
 @
 
-Rozpatrujemy próbę $X_1, \ldots, X_{100}$ z rozkładu $\mathcal{N}(0, 2^2).$ Weźmy $\mu$ z przedziału $(-1, 3)$, z krokiem $h=$\Sexpr{h}. 
-Na wykresie (\ref{fig:power_z1}) linia pionowa została poprowadzona w punkcie $\mu = 1$ z hipotezy zerowej, a linia pozioma wskazuje na przyjęty poziom istotności $\alpha = 0.05$. Możemy zauważyć, że symulacyjnie wyznaczone funkcje mocy są do siebie bardzo zbliżone. Wszystkie testy zdają się być nieobciążone, a prawdopodobieństwo odrzucenia prawdziwej hipotezy zerowej przez każdy z nich jest, z godnie z oczekiwaniami, w okolicach 0.05. Na wykresie (\ref{fig:diff_1}) zaznaczono różnicę mocy dla każdej pary testów. Pomijając te wartości $\mu$ dla których testy mają jednakową moc, okazuje się, że test $z$ jest mocniejszy od testu $t$ w \Sexpr{100 * sum(moc_1 > moc_2) / sum(moc_1 > moc_2 | moc_1 < moc_2)}\% przypadków, a od testu Wilcoxona w \Sexpr{100 * sum(moc_1 > moc_3) / sum(moc_1 > moc_3 | moc_1 < moc_3)}\% przypadków. Test $t$ jest mocniejszy od testu Wilcoxona w \Sexpr{100 * sum(moc_2 > moc_3) / sum(moc_2 > moc_3 | moc_2 < moc_3)}\% przypadków. Z wykresu (\ref{fig:diff_1}) możemy odczytać, że różnice w mocy są rzędu kilku setnych, a dla $\mu = 1$ testy działają bardzo podobnie. 
+Rozpatrujemy próbę $X_1, \ldots, X_{100}$ z rozkładu $\mathcal{N}(\mu, 2^2).$ Weźmy $\mu$ z przedziału $(-1, 3)$, z krokiem $h = $ \Sexpr{h}. 
+Na wykresie (\ref{fig:power_z1}) linia pionowa została poprowadzona w punkcie $\mu = 1$ z~hipotezy zerowej, a linia pozioma wskazuje na przyjęty poziom istotności $\alpha = 0.05$. Możemy zauważyć, że symulacyjnie wyznaczone funkcje mocy są do siebie bardzo zbliżone. Wszystkie testy zdają się być nieobciążone, a prawdopodobieństwo odrzucenia prawdziwej hipotezy zerowej przez każdy z nich jest, zgodnie z oczekiwaniami, w okolicach 0.05. Na wykresie (\ref{fig:diff_1}) zaznaczono różnicę mocy dla każdej pary testów. Pomijając te wartości $\mu$ dla których testy mają jednakową moc, okazuje się, że test $z$~jest mocniejszy od testu $t$ w \Sexpr{100 * sum(moc_z1 > moc_t1) / sum(moc_z1 > moc_t1 | moc_z1 < moc_t1)}\% przypadków, a od testu Wilcoxona w \Sexpr{100 * sum(moc_z1 > moc_w1) / sum(moc_z1 > moc_w1 | moc_z1 < moc_w1)}\% przypadków. Test $t$ jest mocniejszy od testu Wilcoxona w \Sexpr{100 * sum(moc_t1 > moc_w1) / sum(moc_t1 > moc_w1 | moc_t1 < moc_w1)}\% przypadków. Z wykresu (\ref{fig:diff_1}) możemy odczytać, że różnice w mocy są rzędu kilku setnych, a dla $\mu = 1$ testy działają bardzo podobnie. 
 
-Tak więc, pomimo tego, że na pierwszy rzut oka funkcje mocy są zbliżone, dla danych z rozkładu $\mathcal{N}(0, 2^2)$ najlepszym wyborem zdaje się być test $z$ (oczywiście cały czas mówimy o teście przy założeniu $\sigma = 2$). Niemniej jednak, na podstawie przeprowadzonych symulacji, nie jesteśmy w stanie wskazać testu jednostajnie najmocniejszego.
+Tak więc, pomimo tego, że na pierwszy rzut oka funkcje mocy są zbliżone, dla danych z rozkładu $\mathcal{N}(0, 2^2)$ najlepszym wyborem zdaje się być test $z$~(oczywiście cały czas mówimy o teście przy założeniu $\sigma = 2$). Niemniej jednak, na podstawie przeprowadzonych symulacji, nie jesteśmy w stanie wskazać testu jednostajnie najmocniejszego.
 
-<<echo=F, fig.width=14, fig.height=6, fig.align="center", fig.cap="\\label{fig:power_z1}Wykres funkcji mocy przeprowadzonych testów.">>=
+<<WYKRES_1, echo=F, fig.width=14, fig.height=6, fig.align="center", fig.cap="\\label{fig:power_z1}Funkcje mocy przeprowadzonych testów dla $X_i \\sim \\mathcal{N}(\\mu, 2^2)$.">>=
 ggplot(df1, aes(x=mu, y=moc)) +
       geom_line(aes(color=test), size=1) +
       geom_hline(yintercept=0.05) +
       geom_vline(xintercept=mu0) +
       labs(x = expression(mu), y="moc", title="Funkcje mocy testów")  +
       scale_color_discrete(labels = c("t", "Wilcoxon", bquote(paste("z (", sigma, " = 2)", sep="")))) +
-      theme(legend.position = c(0.85, 0.4), legend.background = element_rect(fill = "white", color = "black"))
+      theme(legend.position = c(0.85, 0.4), legend.background = element_rect(fill = "white", color = "black")) +
+      scale_colour_manual(values = colors)
 
 @
 
-<<echo=F, fig.width=14, fig.height=9, fig.align="center", fig.cap="\\label{fig:diff_1}Wykresy różnicy mocy przeprowadzonych testów.">>=
+<<WYKRES_2, echo=F, fig.width=14, fig.height=9, fig.align="center", fig.cap="\\label{fig:diff_1}Różnice mocy przeprowadzonych testów dla $X_i \\sim \\mathcal{N}(\\mu, 2^2)$.">>=
 
-zt_diff1 <- data.frame("mu" = mu, "różnica" = moc_1 - moc_2, "testy" = "moc z - moc t")
-zw_diff1 <- data.frame("mu" = mu, "różnica" = moc_1 - moc_3, "testy" = "moc z - moc Wilc.")
-tw_diff1 <- data.frame("mu" = mu, "różnica" = moc_2 - moc_3, "testy" = "moc t - moc Wilc.")
+zt_diff1 <- data.frame("mu" = mu, "różnica" = moc_z1 - moc_t1, "testy" = "moc z - moc t")
+zw_diff1 <- data.frame("mu" = mu, "różnica" = moc_z1 - moc_w1, "testy" = "moc z - moc Wilc.")
+tw_diff1 <- data.frame("mu" = mu, "różnica" = moc_t1 - moc_w1, "testy" = "moc t - moc Wilc.")
 df_diff1 <- rbind(zt_diff1, zw_diff1, tw_diff1)
 
 ggplot(df_diff1, aes(x=mu, y=różnica)) +
@@ -161,6 +163,160 @@ ggplot(df_diff1, aes(x=mu, y=różnica)) +
 @
 
 \subsection{Przypadek 2.}
+
+<<SYMULACJA-ZADANIE_2, echo=F, cache=T>>=
+set.seed(42)
+
+sigma <- 4
+mu0 <- 1
+
+h <- 0.01
+mu <- seq(-1, 3, h)
+MC <- 1000
+
+moc_z2 <- sapply(mu, function(m) {moc.z(m, mu0, sigma, MC=MC)})
+moc_t2 <- sapply(mu, function(m) {moc.t(m, mu0, sigma, MC=MC)})
+moc_w2 <- sapply(mu, function(m) {moc.wilcoxon(m, mu0, sigma, MC=MC)})
+
+dfz_2 <- data.frame("mu" = mu, "moc" = moc_z2, "test" = "z")
+dft_2 <- data.frame("mu" = mu, "moc" = moc_t2, "test" = "t")
+dfw_2 <- data.frame("mu" = mu, "moc" = moc_w2, "test" = "Wilcoxon")
+df2 <- rbind(dfz_2, dft_2, dfw_2)
+@
+
+Tym razem rozpatrujemy próbę $X_1, \ldots, X_{100}$ z rozkładu $\mathcal{N}(\mu, 4^2).$ Weźmy $\mu$ z przedziału $(-1, 3)$, z krokiem $h = $ \Sexpr{h}. Podobnie jak w poprzednim przykładzie, na wykresie (\ref{fig:power_z2}) linia pionowa została poprowadzona w punkcie $\mu = 1$ z hipotezy zerowej, a linia pozioma odpowiada przyjętemu poziomowi istotności $\alpha = 0.05$.
+Analizując wykres (\ref{fig:power_z2}), od razu możemy zauważyć, że test $z$~nie jest na zadanym poziomie istotności -- hipotezę zerową odrzuca z~prawdopodobieństwem bliskim 0.35. Domyślamy się, że jest to spowodowane niewłaściwą wartością wariancji przyjętej w teście. Cały czas zakładamy, że $\sigma^2 = 4$, gdzie w rzeczywistości $\sigma^2 = 16$, zatem test ten został niewłaściwie użyty.  Problem ten nie dotyczy zaś testu $t$, gdyż przypomnijmy, że sam test opiera się na nieobciążonym estymatorze wariancji z badanej próby, a~nie na teoretycznej wartości $\sigma^2$. Podobnie dobrze radzi sobie test rang znakowanych Wilcoxona -- wygenerowana symulacyjnie funkcja mocy tego testu jest bardzo podobna do tej dla testu $t$. Wykres (\ref{fig:diff_2}) przedstawia różnicę mocy tych dwóch testów dla przyjętych wartości $\mu$. Okazuje się, że pomijając te wartości $\mu$~dla których testy mają jednakową moc, test $t$ jest mocniejszy od testu rang znakowanych Wilcoxona w \Sexpr{100 * sum(moc_t2 > moc_w2) / sum(moc_t2 > moc_w2 | moc_t2 < moc_w2)}\% przypadków. Podobnie jak w przypadku \hyperref[sec:case1]{(1)}, różnice w mocy są rzędu kilku setnych, a dla $\mu = 1$ oba testy działają bardzo podobnie.
+
+Na podstawie przeprowadzonych symulacji nie jesteśmy w stanie wskazać testu jednoznacznie najmocniejszego. Chociaż test $z$ zdaje się być mocniejszy od pozostałych w każdym punkcie alternatywy, to porównywanie go do testów o innym poziomie istotności nie ma zbyt wiele sensu. Nie zważając na poziom istotności zawsze jesteśmy w stanie podać test mocniejszy lub niegorszy od pozostałych, chociażby jednostajnie najmocniejszy test $\varphi(X) = 1$. 
+Jeśli nie mamy pewności co do wartości wariancji rozkładu z którego pochodzi badana próba, powinniśmy skorzystać z testu $t$ (oczywiście przy założeniu normalności próby) lub z testu rang znakowanych Wilcoxona. Spodziewaliśmy się, że test rang znakowanych Wilcoxona wypadnie nieco gorzej na tle testu $t$, jednak dla rozpatrywanej próby o rozmiarze 100, różnice w mocy były bardzo niewielkie. Ich wartości mogą wynikać również z błędu samej metody Monte Carlo.  
+
+<<WYKRES_3, echo=F, fig.width=14, fig.height=6, fig.align="center", fig.cap="\\label{fig:power_z2}Funkcje mocy przeprowadzonych testów dla $X_i \\sim \\mathcal{N}(\\mu, 4^2)$.">>=
+ggplot(df2, aes(x=mu, y=moc)) +
+      geom_line(aes(color=test), size=1) +
+      geom_hline(yintercept=0.05) +
+      geom_vline(xintercept=mu0) +
+      labs(x = expression(mu), y="moc", title="Funkcje mocy testów")  +
+      scale_color_discrete(labels = c("t", "Wilcoxon", bquote(paste("z (", sigma, " = 2)", sep="")))) +
+      theme(legend.position = c(0.85, 0.4), legend.background = element_rect(fill = "white", color = "black")) +
+      scale_colour_manual(values = colors)
+
+@
+
+<<WYKRES_4, echo=F, fig.width=14, fig.height=4, fig.align="center", fig.cap="\\label{fig:diff_2}Różnice mocy przeprowadzonych testów dla $X_i \\sim \\mathcal{N}(\\mu, 4^2)$.">>=
+
+zt_diff2 <- data.frame("mu" = mu, "różnica" = moc_z2 - moc_t2, "testy" = "moc z - moc t")
+zw_diff2 <- data.frame("mu" = mu, "różnica" = moc_z2 - moc_w2, "testy" = "moc z - moc Wilc.")
+tw_diff2 <- data.frame("mu" = mu, "różnica" = moc_t2 - moc_w2, "testy" = "moc t - moc Wilc.")
+# df_diff2 <- rbind(zt_diff2, zw_diff2, tw_diff2)
+df_diff2 <- tw_diff2
+
+ggplot(df_diff2, aes(x=mu, y=różnica)) +
+  geom_point(color="darkslateblue") +
+  labs(x = expression(mu)) +
+  facet_grid(testy ~ ., scales = "free_y") + 
+  theme(legend.position = "none")
+@
+
 \subsection{Przypadek 3.}
-\section{Wnioski}
+
+<< POWER-FUNCTIONS-EXP >>=
+moc.z_exp <- function(mu, mu0, sigma, n=100, alternative="two.sided", alpha=0.05, MC=1000) {
+            mean(sapply(1:MC, function(...) {
+                X <- rexp(n, 1/mu)
+                z.test(X, mu=mu0, sigma.x = 2, alternative=alternative)$p.value < alpha
+              }))
+            }
+
+moc.t_exp <- function(mu, mu0, sigma, n=100, alternative="two.sided", alpha=0.05, MC=1000) {
+            mean(sapply(1:MC, function(...) {
+              X <- rexp(n, 1/mu)
+              t.test(X, mu=mu0, alternative=alternative)$p.value < alpha
+            }))
+           }
+
+moc.wilcoxon_exp <- function(mu, mu0, sigma, n=100, alternative="two.sided", alpha=0.05, MC=1000) {
+                  mean(sapply(1:MC, function(...) {
+                    X <- rexp(n, 1/mu)
+                    wilcox.test(X, mu=mu0*qgamma(0.5, 2, 2), alternative=alternative)$p.value < alpha
+                  }))
+                }
+@
+
+<<SYMULACJA-ZADANIE_3, echo=F, cache=T>>=
+set.seed(42)
+
+sigma <- 2
+mu0 <- 1
+
+h <- 0.01
+mu <- seq(0.01, 4, h)
+MC <- 1000
+
+moc_z3 <- sapply(mu, function(m) {moc.z_exp(m, mu0, sigma, MC=MC)})
+moc_t3 <- sapply(mu, function(m) {moc.t_exp(m, mu0, sigma, MC=MC)})
+moc_w3 <- sapply(mu, function(m) {moc.wilcoxon_exp(m, mu0, sigma, MC=MC)})
+
+dfz_3 <- data.frame("mu" = mu, "moc" = moc_z3, "test" = "z")
+dft_3 <- data.frame("mu" = mu, "moc" = moc_t3, "test" = "t")
+dfw_3 <- data.frame("mu" = mu, "moc" = moc_w3, "test" = "Wilcoxon")
+df3 <- rbind(dfz_3, dft_3, dfw_3)
+@
+
+W ostatnim badanym przez nas przypadku rozpatrujemy próbę $X_1, \ldots, X_{100}$ z rozkładu $\mathcal{E}(\frac{1}{\mu}).$ Weźmy $\mu$ z~przedziału $(0.01, 4)$, z krokiem $h = $ \Sexpr{h}. Podobnie jak wcześniej, na wykresie (\ref{fig:power_z3}) linia pionowa została poprowadzona w punkcie $\mu = 1$ z hipotezy zerowej, a linia pozioma odpowiada przyjętemu poziomowi istotności $\alpha = 0.05$. Na wykresie (\ref{fig:power_z3}) wyraźnie widać, że test $z$~nie działa dobrze dla danych pochodzących z rozkładu wykładniczego. Test zdecydowanie nie jest na przyjętym poziomie istotności i w wielu punktach z~hipotezy alternatywnej jego moc jest bliska 0. Zaskakujące może być to, jak dobrze w tym przypadku wypada test $t$, którego jednym z założeń jest normalność badanej próby. Zauważmy jednak, że w teście $t$ statystyką testową jest $\bar{X}$. Z centralnego twierdzenia granicznego wiemy, że dla dużych rozmiarów próby, rozkład $\bar{X}$ jest zbliżony do rozkładu normalnego, zatem możemy przypuszczać, że dla badanych 100 obserwacji, test $t$ zadziała przyzwoicie. Aby przekonać się, czy faktycznie średnia ze stu niezależnych zmiennych losowych z rozkładu wykładniczego ma rozkład zbliżony do rozkładu normalnego,  wykonamy symulację. Wygenerujemy wektor stu realizacji zmiennej losowej z rozkładu wykładniczego z przykładowym parametrem $\lambda = 1$ i obliczymy średnią próbkową. Procedurę tę powtórzymy sto razy i na wektorze stu takich średnich przeprowadzimy test Shapiro-Wilka na normalność. Otrzymujemy
+
+<<SHAPIRO TEST, echo=F>>=
+set.seed(42)
+M <- sapply(1:100, function(...) {mean(rexp(100, 1))})
+result <- shapiro.test(M)
+@
+
+\begin{center}
+statystyka testowa  W = \Sexpr{result$statistic},  p-wartość = \Sexpr{result$p.value},
+\end{center}
+
+\noindent czyli nie mamy podstaw by odrzucić hipotezę zerową świadczącą o normalności badanej próby. Domyślamy się, że dla innych wartości $\lambda$ wyniki byłyby podobne. Warto również wspomnieć o tym, że dla próby niepochodzącej z~rozkładu normalnego, rozkład statystyki $(n - 1)S^2 / \sigma^2$ może znacząco odbiegać od rozkładu $\chi^2$, jednak z twierdzenia Slutsky'ego wnioskujemy, że dla dużej próby nie będzie to miało większego wpływu na rozkład statystyki $t$. Zatem możemy stierdzić, że test $t$ będzie działał dobrze nawet dla próby o rozkładzie innym niż normalny, pod warunkiem, że próba ta będzie duża.
+
+Test rang znakowanych Wilcoxona, będący testem nieparametrycznym, również działa dobrze dla badanej próby. Sam test traktujemy jako test pseudomediany, czyli mediany średniej zmiennej i jej niezależnej kopii.
+Dla rozkładu $X_1, X_2 \sim \mathcal{E}(\lambda)$ mamy
+
+\[\frac{X_1 + X_2}{2} \sim \mathcal{G}(2, 2\lambda)\]
+\[q_{2, 2\lambda}(0.5) = \frac{q_{2, 2}(0.5)}{\lambda} \approx \frac{0.8391735}{\lambda} = 0.8391735\mu.\]
+
+Na wykresie (\ref{fig:diff_3}) możemy zobaczyć, że dla $\mu < \mu_0$ test rang znakowanych Wilcoxona wypada zdecydowanie gorzej niż test $t$ -- różnica mocy sięga nawet 0.2. Okazuje się, że pomijając te wartości $\mu$ dla których testy mają jednakową moc, test $t$ jest mocniejszy od testu rang znakowanych Wilcoxona w~\Sexpr{100 * sum(moc_t3 > moc_w3) / sum(moc_t3 > moc_w3 | moc_t3 < moc_w3)}\% przypadków. Nie możemy zatem stwierdzić, że test $t$ jest jednostajnie najmocniejszy, gdyż nadal mamy przypadki $\mu \in H_1$, z którymi test rang znakowanych Wilcoxona poradził sobie lepiej.
+
+<<WYKRES_5, echo=F, fig.width=14, fig.height=6, fig.align="center", fig.cap="\\label{fig:power_z3}Funkcje mocy przeprowadzonych testów dla $X_i \\sim \\mathcal{E}(\\frac{1}{\\mu})$.">>=
+ggplot(df3, aes(x=mu, y=moc)) +
+      geom_line(aes(color=test), size=1) +
+      geom_hline(yintercept=0.05) +
+      geom_vline(xintercept=mu0) +
+      labs(x = expression(mu), y="moc", title="Funkcje mocy testów")  +
+      scale_color_discrete(labels = c("t", "Wilcoxon", bquote(paste("z (", sigma, " = 2)", sep="")))) +
+      theme(legend.position = c(0.85, 0.4), legend.background = element_rect(fill = "white", color = "black")) +
+      scale_colour_manual(values = colors)
+
+@
+
+<<WYKRES_6, echo=F, fig.width=14, fig.height=4, fig.align="center", fig.cap="\\label{fig:diff_3}Różnice mocy przeprowadzonych testów dla $X_i \\sim \\mathcal{E}(\\frac{1}{\\mu})$.">>=
+
+zt_diff3 <- data.frame("mu" = mu, "różnica" = moc_z3 - moc_t3, "testy" = "moc z - moc t")
+zw_diff3 <- data.frame("mu" = mu, "różnica" = moc_z3 - moc_w3, "testy" = "moc z - moc Wilc.")
+tw_diff3 <- data.frame("mu" = mu, "różnica" = moc_t3 - moc_w3, "testy" = "moc t - moc Wilc.")
+# df_diff3 <- rbind(zt_diff3, zw_diff3, tw_diff3)
+df_diff3 <- rbind(tw_diff3)
+
+ggplot(df_diff3, aes(x=mu, y=różnica)) +
+  geom_point(color="darkslateblue") +
+  labs(x = expression(mu)) +
+  facet_grid(testy ~ ., scales = "free_y") + 
+  theme(legend.position = "none")
+@
+
+\section{Podsumowanie}
+
+Podsumujmy obserwacje i wnioski uzyskane z analizowanych przypadków.
+Dla próby $X_1, \ldots, X_{100}$ z rozkładu $\mathcal{N}(\mu, 2^2)$ każde założenie rozpatrywanych testów jest spełnione i wszystkie testy mają podobną moc dla $\mu$ z przedziału $(-1, 3)$. Minimalnie najlepszy zdaje się być test $z$, jednak nie możemy jednoznacznie stwierdzić, by był to test jednostajnie najmocniejszy.
+
+Dla próby $X_1, \ldots, X_{100}$ z rozkładu $\mathcal{N}(\mu, 4^2)$ test $z$ (przy założeniu $\sigma = 2$) nie jest odpowiednim wyborem. Jego moc w punkcie $\mu_0$ nie odpowiada zadanemu poziomowi istotności i porównania do pozostałych testów nie niosą sensownych informacji. Test $t$ i test rang znakowanych Wilcoxona są odporne na zmianę wartości wariancji rozkładu. Wszystkie założenia tych testów zostały spełnione, a uzyskane wyniki są bardzo podobne. Nie możemy wyróżnić testu jednostajnie najmocniejszego.
+
+Dla próby $X_1, \ldots, X_{100}$ z rozkładu $\mathcal{E}(\frac{1}{\mu})$ test $z$ działa najgorzej. Nie mamy tu spełnionego założenia o normalności próby, czego skutkiem jest fatalna moc testu. Pomimo że założenie to dotyczy również testu $t$, test ten wypada bardzo dobrze. Jest to efekt działania centralnego twierdzenia granicznego dla tak licznej próby. Okazuje się, że gdy dysponujemy wieloma danymi, test $t$ może być dobrym wyborem pomimo niespełnionych założeń. Ze względu na swoją uniwersalność, test rang znakowanych Wilcoxona również działa na zadowalającym poziomie. W przypadku rozkładu wykładniczego, test ten traktujemy jako test pseudomediany. Chociaż w większości przypadków test $t$ działał najlepiej, nie możemy jednoznacznie stwierdzić by był to test jednostajnie najmocniejszy.
 \end{document}
